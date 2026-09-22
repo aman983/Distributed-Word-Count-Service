@@ -1,0 +1,24 @@
+import string
+from pathlib import Path
+
+
+def getKeyword(document_choice, keyword):
+
+    if (document_choice == "A"):
+        file_path = Path(__file__).parent / "TextDocuments" / "the-full-bee-movie-script.txt"    
+    else:
+        file_path = Path(__file__).parent / "TextDocuments" / "test.txt" 
+
+    with open(file_path, "r") as file:
+        content = file.read()
+
+        #Remove punctuation
+        content_no_punc = content.translate(str.maketrans("","",string.punctuation))
+
+        #Split to array so substrings are not counted
+        wordlist = content_no_punc.split()
+
+        count = wordlist.count(keyword)
+        print(f"Keyword {keyword} appears {count} times in {document_choice}.")
+
+getKeyword("A", "bee")
