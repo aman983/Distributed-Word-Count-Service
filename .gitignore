@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+results/*.csv
+results/*.png
+data/*.txt
+!data/.gitkeep
+.venv/

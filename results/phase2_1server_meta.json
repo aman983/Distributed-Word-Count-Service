@@ -1,0 +1,110 @@
+{
+  "label": "phase2_1server",
+  "host": "server1",
+  "port": 18861,
+  "rates": [
+    10,
+    20,
+    30,
+    40,
+    50
+  ],
+  "duration_s": 10.0,
+  "mode": "nocache",
+  "text_ref": null,
+  "summaries": [
+    {
+      "rate": 10,
+      "requests_sent": 100,
+      "requests_ok": 100,
+      "errors": 0,
+      "achieved_rps": 10.05,
+      "cache_hit_pct": 0.0,
+      "avg_ms": 27.723,
+      "median_ms": 27.72,
+      "p95_ms": 32.927,
+      "p99_ms": 35.748,
+      "max_ms": 35.748,
+      "latency_growth": 0.95,
+      "slip_p99_ms": 0.3,
+      "saturated": false,
+      "generator_lagged": false
+    },
+    {
+      "rate": 20,
+      "requests_sent": 200,
+      "requests_ok": 200,
+      "errors": 0,
+      "achieved_rps": 19.97,
+      "cache_hit_pct": 0.0,
+      "avg_ms": 26.989,
+      "median_ms": 27.048,
+      "p95_ms": 33.214,
+      "p99_ms": 37.001,
+      "max_ms": 42.271,
+      "latency_growth": 0.95,
+      "slip_p99_ms": 0.27,
+      "saturated": false,
+      "generator_lagged": false
+    },
+    {
+      "rate": 30,
+      "requests_sent": 300,
+      "requests_ok": 300,
+      "errors": 0,
+      "achieved_rps": 29.88,
+      "cache_hit_pct": 0.0,
+      "avg_ms": 23.67,
+      "median_ms": 23.861,
+      "p95_ms": 29.825,
+      "p99_ms": 32.332,
+      "max_ms": 35.622,
+      "latency_growth": 0.98,
+      "slip_p99_ms": 0.45,
+      "saturated": false,
+      "generator_lagged": false
+    },
+    {
+      "rate": 40,
+      "requests_sent": 400,
+      "requests_ok": 400,
+      "errors": 0,
+      "achieved_rps": 39.79,
+      "cache_hit_pct": 0.0,
+      "avg_ms": 20.866,
+      "median_ms": 20.623,
+      "p95_ms": 27.367,
+      "p99_ms": 31.001,
+      "max_ms": 32.844,
+      "latency_growth": 0.97,
+      "slip_p99_ms": 1.27,
+      "saturated": false,
+      "generator_lagged": false
+    },
+    {
+      "rate": 50,
+      "requests_sent": 500,
+      "requests_ok": 500,
+      "errors": 0,
+      "achieved_rps": 41.97,
+      "cache_hit_pct": 0.0,
+      "avg_ms": 1113.371,
+      "median_ms": 1174.243,
+      "p95_ms": 1839.755,
+      "p99_ms": 1892.996,
+      "max_ms": 1918.03,
+      "latency_growth": 5.52,
+      "slip_p99_ms": 0.28,
+      "saturated": true,
+      "generator_lagged": false
+    }
+  ],
+  "distribution": [
+    {
+      "server_id": "server1",
+      "requests": 1500,
+      "share_pct": 100.0
+    }
+  ],
+  "timestamp": "2026-09-23 09:12:19"
+}

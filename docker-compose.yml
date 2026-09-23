@@ -1,0 +1,156 @@
+# Architecture of Distributed Systems - Lab 1 - Word Count Service
+#
+#   Phase 2 (one server):
+#       docker compose up -d --build
+#       docker compose exec client python /app/src/client.py -k whale -n 3
+#
+#   Phase 3/4 (three servers behind a load balancer):
+#       docker compose --profile phase3 up -d --build
+#
+# Services without a `profiles:` key start in every mode. server2, server3 and
+# lb only start when the `phase3` profile is requested, so the Phase 2 baseline
+# measurement is not polluted by idle replicas competing for CPU.
+#
+# NOTE: we deliberately declare each replica as its own service instead of using
+# `deploy: replicas`, because the assignment forbids Compose's built-in
+# replication (it assigns random container names and adds its own balancer).
+
+name: ads-wordcount
+
+services:
+
+  # ---------------------------------------------------------------- cache ---
+  redis:
+    image: redis:7-alpine
+    container_name: ads-redis
+    # No persistence: this is a cache, and disk flushes would show up in our
+    # latency measurements as unexplained spikes.
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    networks: [adsnet]
+    ports:
+      - "6379:6379"          # host access for `redis-cli`, not needed by the app
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # --------------------------------------------------------------- server ---
+  server1:
+    build: .
+    image: ads:lab
+    container_name: ads-server-1
+    command: ["python", "-u", "/app/src/server.py"]
+    environment:
+      SERVER_ID: server1
+      RPYC_PORT: "18861"
+      REDIS_HOST: redis
+      DATA_DIR: /app/data
+      ARTIFICIAL_DELAY_MS: "0"
+    volumes:
+      - ./src:/app/src:ro
+      - ./data:/app/data:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks: [adsnet]
+    ports:
+      - "18861:18861"        # direct access from the host, for Phase 2
+
+  server2:
+    build: .
+    image: ads:lab
+    container_name: ads-server-2
+    profiles: ["phase3"]
+    command: ["python", "-u", "/app/src/server.py"]
+    environment:
+      SERVER_ID: server2
+      RPYC_PORT: "18861"
+      REDIS_HOST: redis
+      DATA_DIR: /app/data
+      ARTIFICIAL_DELAY_MS: "0"
+    volumes:
+      - ./src:/app/src:ro
+      - ./data:/app/data:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks: [adsnet]
+
+  server3:
+    build: .
+    image: ads:lab
+    container_name: ads-server-3
+    profiles: ["phase3"]
+    command: ["python", "-u", "/app/src/server.py"]
+    environment:
+      SERVER_ID: server3
+      RPYC_PORT: "18861"
+      REDIS_HOST: redis
+      DATA_DIR: /app/data
+      ARTIFICIAL_DELAY_MS: "0"
+    volumes:
+      - ./src:/app/src:ro
+      - ./data:/app/data:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks: [adsnet]
+
+  # -------------------------------------------------------- load balancer ---
+  # Owned by the load-balancing part of the team. It is a byte-stream TCP proxy
+  # (sockets / asyncio), NOT an RPyC service: it forwards the client's RPyC
+  # stream to a chosen replica. See src/lb_placeholder.py for the contract and
+  # for a throwaway round-robin version you can test your own code against.
+  #
+  # To run your teammates' implementation, point `command` at their file, e.g.
+  #   command: ["python", "-u", "/app/src/lb.py"]
+  lb:
+    build: .
+    image: ads:lab
+    container_name: ads-lb
+    profiles: ["phase3"]
+    command: ["python", "-u", "/app/src/lb_placeholder.py"]
+    environment:
+      LB_PORT: "18870"
+      # host:port of each replica, comma separated
+      BACKENDS: "server1:18861,server2:18861,server3:18861"
+      # round_robin | least_connections  (placeholder supports both)
+      LB_ALGORITHM: "least_connections"
+      HEALTH_INTERVAL: "2"
+    volumes:
+      - ./src:/app/src:ro
+    depends_on:
+      - server1
+      - server2
+      - server3
+    networks: [adsnet]
+    ports:
+      - "18870:18870"
+
+  # --------------------------------------------------------------- client ---
+  # Idle container you exec into. It holds no state; all the interesting
+  # commands are run with `docker compose exec client ...`.
+  client:
+    build: .
+    image: ads:lab
+    container_name: ads-client
+    command: ["/bin/bash", "-c", "while true; do sleep 3600; done"]
+    environment:
+      # Phase 2 points at the server directly. For Phase 3/4, override with:
+      #   docker compose exec -e TARGET_HOST=lb -e TARGET_PORT=18870 client ...
+      TARGET_HOST: server1
+      TARGET_PORT: "18861"
+      RESULTS_DIR: /app/results
+    volumes:
+      - ./src:/app/src:ro
+      - ./data:/app/data:ro
+      - ./results:/app/results     # read/write: figures and CSVs land on the host
+    depends_on:
+      - server1
+    networks: [adsnet]
+
+networks:
+  adsnet:
+    name: ads-net
+    driver: bridge
